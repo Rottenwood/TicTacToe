@@ -7,6 +7,7 @@
 namespace Rottenwood\TicTacBundle\Service;
 
 use Doctrine\ORM\EntityManager;
+use Rottenwood\TicTacBundle\Entity\Game;
 
 class GameService {
 
@@ -15,5 +16,11 @@ class GameService {
 
     public function __construct(EntityManager $em) {
         $this->em = $em;
+    }
+
+    public function newGame() {
+        $game = new Game();
+
+        return $game;
     }
 }
