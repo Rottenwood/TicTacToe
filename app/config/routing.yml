@@ -1,0 +1,5 @@
+rottenwood_tic_tac:
+    resource: "@RottenwoodTicTacBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
