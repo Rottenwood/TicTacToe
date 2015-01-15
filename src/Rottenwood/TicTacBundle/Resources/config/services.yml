@@ -1,2 +1,4 @@
-parameters:
 services:
+    game:
+        class: Rottenwood\TicTacBundle\Service\GameService
+        arguments: [@doctrine.orm.entity_manager]
