@@ -6,7 +6,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Game
+ * Игровая сессия
  * @ORM\Table(name="games")
  * @ORM\Entity
  */
@@ -25,20 +25,12 @@ class Game {
     private $id;
 
     /**
-     * @ORM\ManyToMany(targetEntity="Player")
-     * @ORM\JoinTable()
+     * @ORM\OneToMany(targetEntity="Field", mappedBy="game")
      **/
-    private $players;
-
-    /**
-     * Крестики, Нолики и другие символы в случае если игроков больше двух
-     * @var array
-     * @ORM\Column(name="symbols", type="simple_array")
-     */
-    private $symbols = [];
+    private $fields;
 
     public function __construct() {
-        $this->players = new ArrayCollection();
+        $this->fields = new ArrayCollection();
     }
 
     /**
@@ -52,38 +44,22 @@ class Game {
     /**
      * @return ArrayCollection
      */
-    public function getPlayers() {
-        return $this->players;
+    public function getFields() {
+        return $this->fields;
     }
 
     /**
-     * @param ArrayCollection $players
+     * @param ArrayCollection $fields
      */
-    public function setPlayers($players) {
-        $this->players = $players;
+    public function setFields($fields) {
+        $this->fields = $fields;
     }
 
     /**
-     * @return array
+     * Добавление игрового поля
+     * @param Field $field
      */
-    public function getSymbols() {
-        return $this->symbols;
-    }
-
-    /**
-     * @param array $symbols
-     */
-    public function setSymbols($symbols) {
-        $this->symbols = $symbols;
-    }
-
-    /**
-     * Добавление символа
-     * @param $symbol
-     */
-    public function addSymbol($symbol) {
-        $symbols = $this->getSymbols();
-        $symbols[] = $symbol;
-        $this->setSymbols($symbols);
+    public function addField($field) {
+        $this->setFields($this->getFields()->add($field));
     }
 }
