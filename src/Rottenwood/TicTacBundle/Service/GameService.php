@@ -47,12 +47,11 @@ class GameService {
      * @return array
      */
     public function getEmptyFields(Game $game) {
-        $tics = $game->getTics();
-        $tacs = $game->getTacs();
+        $occupiedFields = array_merge($game->getTics(), $game->getTacs());
 
         $allFields = array_filter($this->getAllFields(),
-            function ($field) use ($tics) {
-                return !in_array($field, $tics);
+            function ($field) use ($occupiedFields) {
+                return !in_array($field, $occupiedFields);
             });
 
         return $allFields;
