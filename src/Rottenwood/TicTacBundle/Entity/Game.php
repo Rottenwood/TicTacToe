@@ -7,11 +7,12 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Game
- * @ORM\Table()
+ * @ORM\Table(name="games")
  * @ORM\Entity
  */
 class Game {
 
+    const NUMBER_OF_PLAYERS = 2;
     const BOARD_AXIS_X = 3;
     const BOARD_AXIS_Y = 3;
 

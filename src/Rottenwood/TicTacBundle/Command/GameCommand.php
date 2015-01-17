@@ -29,7 +29,7 @@ class GameCommand extends ContainerAwareCommand {
         $table = $this->getHelper('table');
         $questionHelper = $this->getHelper('question');
 
-        $game = $this->gameService->newGame();
+        $game = $this->gameService->startNewGame();
 
         $output->writeln(['Новая игра начинается!', '']);
 
@@ -38,7 +38,7 @@ class GameCommand extends ContainerAwareCommand {
             $this->makeRound($game, $input, $output, $questionHelper);
         }
 
-        $output->writeln('Игра завершена!');
+        $output->writeln('Игра завершена в ничью!');
     }
 
     /**
@@ -113,8 +113,8 @@ class GameCommand extends ContainerAwareCommand {
 
         $field = $questionHelper->ask($input, $output, $questionChoice);
 
-        // Добавление крестика
-        $game->addTic($field);
+        // Добавление символа
+        $game->addSymbol($field);
 
         $output->writeln(['Игрок поставил крестик на клетку ' . $field . '.', '']);
     }

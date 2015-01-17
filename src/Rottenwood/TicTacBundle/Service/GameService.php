@@ -8,6 +8,7 @@ namespace Rottenwood\TicTacBundle\Service;
 
 use Doctrine\ORM\EntityManager;
 use Rottenwood\TicTacBundle\Entity\Game;
+use Rottenwood\TicTacBundle\Entity\Player;
 
 class GameService {
 
@@ -18,8 +19,23 @@ class GameService {
         $this->em = $em;
     }
 
-    public function newGame() {
+    public function startNewGame() {
         $game = new Game();
+
+        $playerTic = $this->initialisePlayer('X', 'крестики');
+        $playerTac = $this->initialisePlayer('O', 'нолики');
+
+        if (Game::NUMBER_OF_PLAYERS > 2) {
+            $letters = $this->createLettersArray();
+            for ($i = 2; $i < Game::NUMBER_OF_PLAYERS; $i++) {
+                $symbol = array_rand(array_diff($letters, ['X', 'O']));
+                $symbol = ucfirst($letters[$symbol]);
+
+                $this->initialisePlayer($symbol);
+            }
+        }
+
+        $this->em->flush();
 
         return $game;
     }
@@ -47,7 +63,7 @@ class GameService {
      * @return array
      */
     public function getEmptyFields(Game $game) {
-        $occupiedFields = array_merge($game->getTics(), $game->getTacs());
+        $occupiedFields = array_merge($game->getSymbols());
 
         $allFields = array_filter($this->getAllFields(),
             function ($field) use ($occupiedFields) {
@@ -63,5 +79,30 @@ class GameService {
      */
     public function createLettersArray() {
         return range('a', 'z');
+    }
+
+    public function checkWinner($game) {
+
+    }
+
+    public function currentPlayer($game) {
+
+    }
+
+    private function initialisePlayer($symbol, $name = '') {
+        $player = $this->em->getRepository('RottenwoodTicTacBundle:Player')->findByName($name);
+
+        if (!$player) {
+            if (!$name) {
+                $name = 'буквы ' . $symbol;
+            }
+
+            $player = new Player();
+            $player->setName($name);
+            $player->setSymbol($symbol);
+            $this->em->persist($player);
+        }
+
+        return $player;
     }
 }
