@@ -7,6 +7,8 @@
 namespace Rottenwood\TicTacBundle\Service;
 
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityRepository;
+use Rottenwood\TicTacBundle\Entity\Field;
 use Rottenwood\TicTacBundle\Entity\Game;
 use Rottenwood\TicTacBundle\Entity\Player;
 
@@ -14,11 +16,18 @@ class GameService {
 
     /** @var EntityManager $em */
     private $em;
+    /** @var EntityRepository $playerRepository */
+    private $playerRepository;
 
     public function __construct(EntityManager $em) {
         $this->em = $em;
+        $this->playerRepository = $this->em->getRepository('RottenwoodTicTacBundle:Player');
     }
 
+    /**
+     * Создание новой игры
+     * @return Game
+     */
     public function startNewGame() {
         $game = new Game();
 
@@ -44,17 +53,17 @@ class GameService {
      * Массив всех клеток поля
      * @return array
      */
-    public function getAllFields() {
+    public function getAllFieldsNames() {
         $letters = $this->createLettersArray();
 
-        $emptyFields = [];
+        $fields = [];
         for ($i = 0; $i < Game::BOARD_AXIS_Y; $i++) {
             for ($x = 1; $x <= Game::BOARD_AXIS_X; $x++) {
-                $emptyFields[] = $letters[$i] . $x;
+                $fields[] = $letters[$i] . $x;
             }
         }
 
-        return $emptyFields;
+        return $fields;
     }
 
     /**
@@ -63,14 +72,12 @@ class GameService {
      * @return array
      */
     public function getEmptyFields(Game $game) {
-        $occupiedFields = array_merge($game->getSymbols());
-
-        $allFields = array_filter($this->getAllFields(),
-            function ($field) use ($occupiedFields) {
-                return !in_array($field, $occupiedFields);
+        $occupiedFieldNames =
+            $game->getFields()->map(function (Field $field) {
+                return $field->getName();
             });
 
-        return $allFields;
+        return array_diff($this->getAllFieldsNames(), $occupiedFieldNames->toArray());
     }
 
     /**
@@ -81,16 +88,25 @@ class GameService {
         return range('a', 'z');
     }
 
-    public function checkWinner($game) {
+    public function checkWinner(Game $game) {
 
     }
 
-    public function currentPlayer($game) {
+    public function currentPlayer(Game $game) {
+        $defaultPlayer = $this->playerRepository->find(1);
+        $lastField = $game->getFields()->last();
 
+        return $lastField ? $lastField->getPlayer() : $defaultPlayer;
     }
 
+    /**
+     * Создание и инициализация игрока
+     * @param string $symbol
+     * @param string $name
+     * @return Player
+     */
     private function initialisePlayer($symbol, $name = '') {
-        $player = $this->em->getRepository('RottenwoodTicTacBundle:Player')->findByName($name);
+        $player = $this->playerRepository->findByName($name);
 
         if (!$player) {
             if (!$name) {

@@ -35,6 +35,12 @@ class Field {
      **/
     private $player;
 
+    function __construct(Game $game, Player $player, $name) {
+        $this->game = $game;
+        $this->player = $player;
+        $this->name = $name;
+    }
+
     /**
      * @return integer
      */

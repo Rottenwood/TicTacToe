@@ -60,6 +60,6 @@ class Game {
      * @param Field $field
      */
     public function addField($field) {
-        $this->setFields($this->getFields()->add($field));
+        $this->getFields()->add($field);
     }
 }

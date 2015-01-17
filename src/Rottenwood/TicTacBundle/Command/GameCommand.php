@@ -6,6 +6,7 @@
 
 namespace Rottenwood\TicTacBundle\Command;
 
+use Rottenwood\TicTacBundle\Entity\Field;
 use Rottenwood\TicTacBundle\Entity\Game;
 use Rottenwood\TicTacBundle\Service\GameService;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
@@ -31,9 +32,11 @@ class GameCommand extends ContainerAwareCommand {
 
         $game = $this->gameService->startNewGame();
 
+
         $output->writeln(['Новая игра начинается!', '']);
 
         while ($this->gameService->getEmptyFields($game)) {
+            $this->gameService->currentPlayer($game);
             $this->drawTable($table, $output);
             $this->makeRound($game, $input, $output, $questionHelper);
         }
@@ -104,18 +107,21 @@ class GameCommand extends ContainerAwareCommand {
                                InputInterface $input,
                                OutputInterface $output,
                                QuestionHelper $questionHelper) {
+        $currentPlayer = $this->gameService->currentPlayer($game);
         $questionChoice = new ChoiceQuestion(
-            'Ход игрока: ',
+            sprintf('Ход игрока "%s"', $currentPlayer->getSymbol()),
             $this->gameService->getEmptyFields($game)
         );
-        $questionChoice->setPrompt('Введите номер соответствующий пустой клетке: ');
+        $questionChoice->setPrompt('Введите номер пустой клетки: ');
         $questionChoice->setErrorMessage('Выбранное поле занято или не существует!');
 
-        $field = $questionHelper->ask($input, $output, $questionChoice);
+        $fieldName = $questionHelper->ask($input, $output, $questionChoice);
 
-        // Добавление символа
-        $game->addSymbol($field);
+        // Добавление поля
+        $field = new Field($game, $currentPlayer, $fieldName);
 
-        $output->writeln(['Игрок поставил крестик на клетку ' . $field . '.', '']);
+        $game->addField($field);
+
+        $output->writeln([sprintf('Вы заняли клетку %s.', $field->getName()), '']);
     }
 }
