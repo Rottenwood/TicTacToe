@@ -2,6 +2,7 @@
 
 namespace Rottenwood\TicTacBundle\Entity;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -23,19 +24,21 @@ class Game {
     private $id;
 
     /**
-     * Крестики
-     * @var array
-     * @ORM\Column(name="tics", type="simple_array")
-     */
-    private $tics = [];
+     * @ORM\ManyToMany(targetEntity="Player")
+     * @ORM\JoinTable()
+     **/
+    private $players;
 
     /**
-     * Нолики
+     * Крестики, Нолики и другие символы в случае если игроков больше двух
      * @var array
-     * @ORM\Column(name="tacs", type="simple_array")
+     * @ORM\Column(name="symbols", type="simple_array")
      */
-    private $tacs = [];
+    private $symbols = [];
 
+    public function __construct() {
+        $this->players = new ArrayCollection();
+    }
 
     /**
      * Get id
@@ -46,60 +49,40 @@ class Game {
     }
 
     /**
-     * Set tics
-     * @param array $tics
-     * @return Game
+     * @return ArrayCollection
      */
-    public function setTics(array $tics) {
-        $this->tics = $tics;
-
-        return $this;
+    public function getPlayers() {
+        return $this->players;
     }
 
     /**
-     * Get tics
+     * @param ArrayCollection $players
+     */
+    public function setPlayers($players) {
+        $this->players = $players;
+    }
+
+    /**
      * @return array
      */
-    public function getTics() {
-        return $this->tics;
+    public function getSymbols() {
+        return $this->symbols;
     }
 
     /**
-     * Добавление крестика
-     * @param $tic
+     * @param array $symbols
      */
-    public function addTic($tic) {
-        $tics = $this->getTics();
-        $tics[] = $tic;
-        $this->setTics($tics);
+    public function setSymbols($symbols) {
+        $this->symbols = $symbols;
     }
 
     /**
-     * Set tacs
-     * @param array $tacs
-     * @return Game
+     * Добавление символа
+     * @param $symbol
      */
-    public function setTacs(array $tacs) {
-        $this->tacs = $tacs;
-
-        return $this;
-    }
-
-    /**
-     * Get tacs
-     * @return array
-     */
-    public function getTacs() {
-        return $this->tacs;
-    }
-
-    /**
-     * Добавление нолика
-     * @param $tac
-     */
-    public function addTac($tac) {
-        $tacs = $this->getTacs();
-        $tacs[] = $tac;
-        $this->setTacs($tacs);
+    public function addSymbol($symbol) {
+        $symbols = $this->getSymbols();
+        $symbols[] = $symbol;
+        $this->setSymbols($symbols);
     }
 }
