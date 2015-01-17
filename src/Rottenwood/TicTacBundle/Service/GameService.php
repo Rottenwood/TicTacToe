@@ -23,4 +23,43 @@ class GameService {
 
         return $game;
     }
+
+    /**
+     * Массив всех клеток поля
+     * @return array
+     */
+    public function getAllFields() {
+        $letters = $this->createLettersArray();
+
+        $emptyFields = [];
+        for ($i = 0; $i < Game::BOARD_AXIS_Y; $i++) {
+            for ($x = 1; $x <= Game::BOARD_AXIS_X; $x++) {
+                $emptyFields[] = $letters[$i] . ' ' . $x;
+            }
+        }
+
+        return $emptyFields;
+    }
+
+    /**
+     * Массив свободных клеток поля
+     * @param Game $game
+     * @return array
+     */
+    public function getEmptyFields(Game $game) {
+        $tics = $game->getTics();
+        $tacs = $game->getTacs();
+
+        $allFields = $this->getAllFields();
+
+        return $allFields;
+    }
+
+    /**
+     * Создание массива с буквами для обозначения строк
+     * @return array
+     */
+    public function createLettersArray() {
+        return range('a', 'z');
+    }
 }

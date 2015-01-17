@@ -7,12 +7,17 @@
 namespace Rottenwood\TicTacBundle\Command;
 
 use Rottenwood\TicTacBundle\Entity\Game;
+use Rottenwood\TicTacBundle\Service\GameService;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Helper\TableHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class GameCommand extends ContainerAwareCommand {
+
+    /** @var GameService $gameService */
+    private $gameService;
 
     protected function configure() {
         $this->setName('game:start')->setDescription('Start tic-tac-toe game now!');
@@ -20,11 +25,16 @@ class GameCommand extends ContainerAwareCommand {
 
     protected function execute(InputInterface $input, OutputInterface $output) {
         $table = $this->getHelper('table');
-        $game = $this->getContainer('game');
+        $this->gameService = $this->getContainer()->get('game');
+        $game = $this->gameService->newGame();
 
-        $output->writeln('Новая игра начинается!');
+        $output->writeln(['Новая игра начинается!', '']);
 
-        $this->drawTable($table, $output);
+        while ($this->gameService->getEmptyFields($game)) {
+            $this->drawTable($table, $output);
+            $this->makeRound($game, $input, $output);
+        }
+
     }
 
     /**
@@ -38,7 +48,7 @@ class GameCommand extends ContainerAwareCommand {
         $imageTac = ' O ';
         $imageBorder = '---';
         $imageSpace = ' ';
-        $letters = range('a', 'z');
+        $letters = $this->gameService->createLettersArray();
 
         $headers = range(1, Game::BOARD_AXIS_X);
         array_unshift($headers, $imageSpace);
@@ -61,6 +71,7 @@ class GameCommand extends ContainerAwareCommand {
 
         $table->setRows($rows);
         $table->render($output);
+        $output->writeln('');
     }
 
     /**
@@ -76,5 +87,21 @@ class GameCommand extends ContainerAwareCommand {
             },
             $array
         );
+    }
+
+    private function makeRound(Game $game, InputInterface $input, OutputInterface $output) {
+        // Игровой ход
+        $helper = $this->getHelper('question');
+
+        $question = new ChoiceQuestion(
+            'Ход игрока: ',
+            $this->gameService->getEmptyFields($game)
+        );
+        $question->setPrompt('Введите номер соответствующий пустой клетке: ');
+        $question->setErrorMessage('Выбранное поле занято или не существует!');
+
+        $color = $helper->ask($input, $output, $question);
+
+        $output->writeln(['Игрок поставил крестик на клетку ' . $color . '.', '', 'Следующий раунд!']);
     }
 }
