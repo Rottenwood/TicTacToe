@@ -38,6 +38,7 @@ class GameCommand extends ContainerAwareCommand {
             $this->makeRound($game, $input, $output, $questionHelper);
         }
 
+        $output->writeln('Игра завершена!');
     }
 
     /**
@@ -115,6 +116,6 @@ class GameCommand extends ContainerAwareCommand {
         // Добавление крестика
         $game->addTic($field);
 
-        $output->writeln(['Игрок поставил крестик на клетку ' . $field . '.', '', 'Следующий раунд!']);
+        $output->writeln(['Игрок поставил крестик на клетку ' . $field . '.', '']);
     }
 }

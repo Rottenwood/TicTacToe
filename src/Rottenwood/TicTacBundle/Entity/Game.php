@@ -27,14 +27,14 @@ class Game {
      * @var array
      * @ORM\Column(name="tics", type="simple_array")
      */
-    private $tics;
+    private $tics = [];
 
     /**
      * Нолики
      * @var array
      * @ORM\Column(name="tacs", type="simple_array")
      */
-    private $tacs;
+    private $tacs = [];
 
 
     /**

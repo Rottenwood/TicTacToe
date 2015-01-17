@@ -34,7 +34,7 @@ class GameService {
         $emptyFields = [];
         for ($i = 0; $i < Game::BOARD_AXIS_Y; $i++) {
             for ($x = 1; $x <= Game::BOARD_AXIS_X; $x++) {
-                $emptyFields[] = $letters[$i] . ' ' . $x;
+                $emptyFields[] = $letters[$i] . $x;
             }
         }
 
@@ -50,7 +50,10 @@ class GameService {
         $tics = $game->getTics();
         $tacs = $game->getTacs();
 
-        $allFields = $this->getAllFields();
+        $allFields = array_filter($this->getAllFields(),
+            function ($field) use ($tics) {
+                return !in_array($field, $tics);
+            });
 
         return $allFields;
     }
