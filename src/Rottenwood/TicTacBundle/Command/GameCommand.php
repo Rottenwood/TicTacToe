@@ -9,6 +9,7 @@ namespace Rottenwood\TicTacBundle\Command;
 use Rottenwood\TicTacBundle\Entity\Game;
 use Rottenwood\TicTacBundle\Service\GameService;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\TableHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -24,15 +25,17 @@ class GameCommand extends ContainerAwareCommand {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
-        $table = $this->getHelper('table');
         $this->gameService = $this->getContainer()->get('game');
+        $table = $this->getHelper('table');
+        $questionHelper = $this->getHelper('question');
+
         $game = $this->gameService->newGame();
 
         $output->writeln(['Новая игра начинается!', '']);
 
         while ($this->gameService->getEmptyFields($game)) {
             $this->drawTable($table, $output);
-            $this->makeRound($game, $input, $output);
+            $this->makeRound($game, $input, $output, $questionHelper);
         }
 
     }
@@ -89,19 +92,29 @@ class GameCommand extends ContainerAwareCommand {
         );
     }
 
-    private function makeRound(Game $game, InputInterface $input, OutputInterface $output) {
-        // Игровой ход
-        $helper = $this->getHelper('question');
-
-        $question = new ChoiceQuestion(
+    /**
+     * Запуск и просчет игрового раунда
+     * @param Game            $game
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @param QuestionHelper  $questionHelper
+     */
+    private function makeRound(Game $game,
+                               InputInterface $input,
+                               OutputInterface $output,
+                               QuestionHelper $questionHelper) {
+        $questionChoice = new ChoiceQuestion(
             'Ход игрока: ',
             $this->gameService->getEmptyFields($game)
         );
-        $question->setPrompt('Введите номер соответствующий пустой клетке: ');
-        $question->setErrorMessage('Выбранное поле занято или не существует!');
+        $questionChoice->setPrompt('Введите номер соответствующий пустой клетке: ');
+        $questionChoice->setErrorMessage('Выбранное поле занято или не существует!');
 
-        $color = $helper->ask($input, $output, $question);
+        $field = $questionHelper->ask($input, $output, $questionChoice);
 
-        $output->writeln(['Игрок поставил крестик на клетку ' . $color . '.', '', 'Следующий раунд!']);
+        // Добавление крестика
+        $game->addTic($field);
+
+        $output->writeln(['Игрок поставил крестик на клетку ' . $field . '.', '', 'Следующий раунд!']);
     }
 }

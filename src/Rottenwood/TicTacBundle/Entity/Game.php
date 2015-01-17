@@ -65,6 +65,16 @@ class Game {
     }
 
     /**
+     * Добавление крестика
+     * @param $tic
+     */
+    public function addTic($tic) {
+        $tics = $this->getTics();
+        $tics[] = $tic;
+        $this->setTics($tics);
+    }
+
+    /**
      * Set tacs
      * @param array $tacs
      * @return Game
@@ -81,5 +91,15 @@ class Game {
      */
     public function getTacs() {
         return $this->tacs;
+    }
+
+    /**
+     * Добавление нолика
+     * @param $tac
+     */
+    public function addTac($tac) {
+        $tacs = $this->getTacs();
+        $tacs[] = $tac;
+        $this->setTacs($tacs);
     }
 }
