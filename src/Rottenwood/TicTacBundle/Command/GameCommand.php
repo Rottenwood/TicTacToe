@@ -18,6 +18,9 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class GameCommand extends ContainerAwareCommand {
 
+    const MENU_GAME_NEW = 1;
+    const MENU_GAME_LOAD = 2;
+
     /** @var GameService $gameService */
     private $gameService;
 
@@ -29,6 +32,8 @@ class GameCommand extends ContainerAwareCommand {
         $this->gameService = $this->getContainer()->get('game');
         $table = $this->getHelper('table');
         $questionHelper = $this->getHelper('question');
+
+        $this->runMenu($questionHelper, $input, $output);
 
         $game = $this->gameService->startNewGame();
 
@@ -123,21 +128,45 @@ class GameCommand extends ContainerAwareCommand {
                                QuestionHelper $questionHelper) {
         $currentPlayer = $this->gameService->nextPlayer($game);
 
-        $questionChoice = new ChoiceQuestion(
+        $question = new ChoiceQuestion(
             sprintf('Сейчас ходят %s:', $currentPlayer->getName()),
             $this->gameService->getEmptyFields($game)
         );
-        $questionChoice->setPrompt('Введите номер пустой клетки: ');
-        $questionChoice->setErrorMessage('Выбранное поле занято или не существует!');
+        $question->setPrompt('Введите номер пустой клетки: ');
+        $question->setErrorMessage('Выбранное поле занято или не существует!');
 
-        $fieldName = $questionHelper->ask($input, $output, $questionChoice);
+        $fieldName = $questionHelper->ask($input, $output, $question);
 
         // Добавление поля
         $field = new Field($game, $currentPlayer, $fieldName);
         $game->addField($field);
 
-        $output->writeln([sprintf('Вы заняли клетку %s.', $field->getName()),'']);
+        $output->writeln([sprintf('Вы заняли клетку "%s".', $field->getName()), '']);
 
         return true;
+    }
+
+    /**
+     * Главное игровое меню
+     * @param QuestionHelper  $questionHelper
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return int
+     */
+    private function runMenu(QuestionHelper $questionHelper, InputInterface $input, OutputInterface $output) {
+        $question = new ChoiceQuestion(
+            'Добро пожаловать в Симфонические Крестики-Нолики!',
+            [
+                self::MENU_GAME_NEW  => 'Начать новую игру',
+                self::MENU_GAME_LOAD => 'Загрузить старую',
+            ],
+            0
+        );
+        $question->setPrompt('Каким будет ваш выбор?: ');
+        $question->setErrorMessage('Пожалуйста, выберите номер из списка!');
+
+        $menuItem = $questionHelper->ask($input, $output, $question);
+
+        return array_search($menuItem, $question->getChoices());
     }
 }
