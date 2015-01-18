@@ -41,7 +41,6 @@ class Game {
     }
 
     /**
-     * Get id
      * @return integer
      */
     public function getId() {

@@ -33,19 +33,26 @@ class GameCommand extends ContainerAwareCommand {
         $game = $this->gameService->startNewGame();
 
         $output->writeln(['Новая игра начинается!', '']);
-
         $this->drawTable($game, $table, $output);
-        while ($this->gameService->getEmptyFields($game)) {
+
+        while ($this->gameService->getEmptyFields($game) && !$this->gameService->isGameOver($game)) {
+            $currentPlayer = $this->gameService->getCurrentPlayer($game);
             $this->makeRound($game, $input, $output, $questionHelper);
             $this->drawTable($game, $table, $output);
         }
 
-        $output->writeln('Игра завершена в ничью!');
+        if (isset($currentPlayer) && $this->gameService->isGameOver($game)) {
+            $output->writeln(sprintf('Игра завершена. Победили %s!', $currentPlayer->getName()));
+        } else {
+            $output->writeln('Игра завершена в ничью!');
+        }
+
     }
 
     /**
      * Отрисовка таблицы
      * Некоторые методы консольных хелперов задепрекейтили, но альтернативу пока не дали
+     * @param Game            $game
      * @param TableHelper     $table
      * @param OutputInterface $output
      */
@@ -108,12 +115,13 @@ class GameCommand extends ContainerAwareCommand {
      * @param InputInterface  $input
      * @param OutputInterface $output
      * @param QuestionHelper  $questionHelper
+     * @return bool
      */
     private function makeRound(Game $game,
                                InputInterface $input,
                                OutputInterface $output,
                                QuestionHelper $questionHelper) {
-        $currentPlayer = $this->gameService->getCurrentPlayer($game);
+        $currentPlayer = $this->gameService->nextPlayer($game);
 
         $questionChoice = new ChoiceQuestion(
             sprintf('Сейчас ходят %s:', $currentPlayer->getName()),
@@ -126,9 +134,10 @@ class GameCommand extends ContainerAwareCommand {
 
         // Добавление поля
         $field = new Field($game, $currentPlayer, $fieldName);
-
         $game->addField($field);
 
-        $output->writeln([sprintf('Вы заняли клетку %s.', $field->getName()), '']);
+        $output->writeln([sprintf('Вы заняли клетку %s.', $field->getName()),'']);
+
+        return true;
     }
 }
