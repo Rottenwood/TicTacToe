@@ -5,7 +5,7 @@ namespace Rottenwood\TicTacBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Игровое поле
+ * Клетка игрового поля
  * @ORM\Table(name="fields")
  * @ORM\Entity
  */

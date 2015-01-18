@@ -5,7 +5,7 @@ namespace Rottenwood\TicTacBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Player
+ * Игрок
  * @ORM\Table(name="players")
  * @ORM\Entity
  */

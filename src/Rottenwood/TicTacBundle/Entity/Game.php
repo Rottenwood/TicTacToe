@@ -29,7 +29,13 @@ class Game {
      **/
     private $fields;
 
-    public function __construct() {
+    /**
+     * @ORM\ManyToMany(targetEntity="Player")
+     **/
+    private $players;
+
+    public function __construct(ArrayCollection $players) {
+        $this->players = $players;
         $this->fields = new ArrayCollection();
     }
 
@@ -61,5 +67,19 @@ class Game {
      */
     public function addField($field) {
         $this->getFields()->add($field);
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getPlayers() {
+        return $this->players;
+    }
+
+    /**
+     * @param ArrayCollection $players
+     */
+    public function setPlayers($players) {
+        $this->players = $players;
     }
 }

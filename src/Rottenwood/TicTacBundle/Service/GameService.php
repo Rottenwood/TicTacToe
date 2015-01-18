@@ -6,6 +6,7 @@
 
 namespace Rottenwood\TicTacBundle\Service;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Rottenwood\TicTacBundle\Entity\Field;
@@ -29,10 +30,12 @@ class GameService {
      * @return Game
      */
     public function startNewGame() {
-        $game = new Game();
-
-        $playerTic = $this->initialisePlayer('X', 'крестики');
-        $playerTac = $this->initialisePlayer('O', 'нолики');
+        $players = new ArrayCollection(
+            [
+                $this->initialisePlayer('X', 'крестики'),
+                $this->initialisePlayer('O', 'нолики'),
+            ]
+        );
 
         if (Game::NUMBER_OF_PLAYERS > 2) {
             $letters = $this->createLettersArray();
@@ -40,17 +43,17 @@ class GameService {
                 $symbol = array_rand(array_diff($letters, ['X', 'O']));
                 $symbol = ucfirst($letters[$symbol]);
 
-                $this->initialisePlayer($symbol);
+                $players->add($this->initialisePlayer($symbol));
             }
         }
 
         $this->em->flush();
 
-        return $game;
+        return new Game($players);
     }
 
     /**
-     * Массив всех клеток поля
+     * Массив названий всех клеток поля
      * @return array
      */
     public function getAllFieldsNames() {
@@ -92,11 +95,23 @@ class GameService {
 
     }
 
-    public function currentPlayer(Game $game) {
-        $defaultPlayer = $this->playerRepository->find(1);
-        $lastField = $game->getFields()->last();
+    /**
+     * Определение текущего игрока
+     * @param Game $game
+     * @return Player
+     */
+    public function getCurrentPlayer(Game $game) {
+        $players = $game->getPlayers();
 
-        return $lastField ? $lastField->getPlayer() : $defaultPlayer;
+        if ($game->getFields()->isEmpty() || !$players->current()) {
+            $player = $players->first();
+        } else {
+            $player = $players->current();
+        }
+
+        $players->next();
+
+        return $player;
     }
 
     /**
@@ -106,7 +121,7 @@ class GameService {
      * @return Player
      */
     private function initialisePlayer($symbol, $name = '') {
-        $player = $this->playerRepository->findByName($name);
+        $player = $this->playerRepository->findOneByName($name);
 
         if (!$player) {
             if (!$name) {
