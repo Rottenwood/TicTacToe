@@ -88,7 +88,7 @@ class GameService {
      * @return array
      */
     public function createLettersArray() {
-        return range('a', 'z');
+        return array_merge(range('a', 'z'), range('A', 'Z'));
     }
 
     /**
@@ -111,7 +111,7 @@ class GameService {
         $lastFieldX = (int)substr($lastFieldName, 1);
         $lastFieldY = $lastFieldName[0];
 
-        $fieldsNeedToWin = min(Game::BOARD_AXIS_X, Game::BOARD_AXIS_Y) <= 5 ? 2 : 4;
+        $fieldsNeedToWin = min(Game::BOARD_AXIS_X, Game::BOARD_AXIS_Y) < 5 ? 2 : 4;
         $winningCombinations = $this->computeWinningCombinations($lastFieldX, $lastFieldY, $fieldsNeedToWin, $letters);
 
         foreach ($winningCombinations as $winningCombination) {
