@@ -33,32 +33,39 @@ class GameCommand extends ContainerAwareCommand {
         $table = $this->getHelper('table');
         $questionHelper = $this->getHelper('question');
 
-        $this->runMenu($questionHelper, $input, $output);
+        $menuItem = $this->runMenu($questionHelper, $input, $output);
 
-        $game = $this->gameService->startNewGame();
-
-        $output->writeln(['Новая игра начинается!', '']);
-        $this->drawTable($game, $table, $output);
-
-        while ($this->gameService->getEmptyFields($game) && !$this->gameService->isGameOver($game)) {
-            $currentPlayer = $this->gameService->getCurrentPlayer($game);
-            $this->makeRound($game, $input, $output, $questionHelper);
-            $this->drawTable($game, $table, $output);
-        }
-
-        if (isset($currentPlayer) && $this->gameService->isGameOver($game)) {
-            $output->writeln(sprintf('Игра завершена. Победили %s!', $currentPlayer->getName()));
+        if ($menuItem == self::MENU_GAME_NEW) {
+            $game = $this->gameService->newGame();
+            $output->writeln(['Новая игра начинается!', '']);
         } else {
-            $output->writeln('Игра завершена в ничью!');
+            $game = $this->loadGame($questionHelper, $input, $output);
         }
 
+        if ($game) {
+            $this->drawTable($game, $table, $output);
+
+            while ($this->gameService->getEmptyFields($game) && !$this->gameService->isGameOver($game)) {
+                $currentPlayer = $this->gameService->getCurrentPlayer($game);
+                $this->makeRound($game, $input, $output, $questionHelper);
+                $this->drawTable($game, $table, $output);
+            }
+
+            if (isset($currentPlayer) && $this->gameService->isGameOver($game)) {
+                $output->writeln(sprintf('Игра завершена. Победили %s!', $currentPlayer->getName()));
+            } else {
+                $output->writeln('Игра завершена в ничью!');
+            }
+        } else {
+            $output->writeln('Не найдено ни одной сохраннной игры.');
+        }
     }
 
     /**
      * Отрисовка таблицы
-     * Некоторые методы консольных хелперов задепрекейтили, но альтернативу пока не дали
      * @param Game            $game
      * @param TableHelper     $table
+     * TableHelper задепрекейтили, но getHelper его все еще возвращает
      * @param OutputInterface $output
      */
     private function drawTable(Game $game, TableHelper $table, OutputInterface $output) {
@@ -160,7 +167,7 @@ class GameCommand extends ContainerAwareCommand {
                 self::MENU_GAME_NEW  => 'Начать новую игру',
                 self::MENU_GAME_LOAD => 'Загрузить старую',
             ],
-            0
+            self::MENU_GAME_NEW
         );
         $question->setPrompt('Каким будет ваш выбор?: ');
         $question->setErrorMessage('Пожалуйста, выберите номер из списка!');
@@ -168,5 +175,39 @@ class GameCommand extends ContainerAwareCommand {
         $menuItem = $questionHelper->ask($input, $output, $question);
 
         return array_search($menuItem, $question->getChoices());
+    }
+
+    /**
+     * Загрузка сохраненной игры
+     * @param QuestionHelper  $questionHelper
+     * @param InputInterface  $input
+     * @param OutputInterface $output
+     * @return bool|Game
+     */
+    private function loadGame(QuestionHelper $questionHelper, InputInterface $input, OutputInterface $output) {
+        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
+        $gameRepository = $em->getRepository('RottenwoodTicTacBundle:Game');
+
+        $savedGames = $gameRepository->findAll();
+
+        if (!$savedGames) {
+            return false;
+        }
+
+        $savedGames = array_map(function (Game $game) {
+            return $game->getId();
+        },
+            $savedGames);
+
+        $question = new ChoiceQuestion(
+            'Список сохраненных игр:',
+            $savedGames
+        );
+        $question->setPrompt('Какую игру вы хотите загрузить?: ');
+        $question->setErrorMessage('Пожалуйста, выберите номер из списка!');
+
+        $gameId = $questionHelper->ask($input, $output, $question);
+
+        return $gameRepository->find($gameId);
     }
 }

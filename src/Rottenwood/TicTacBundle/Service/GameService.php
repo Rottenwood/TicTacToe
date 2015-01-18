@@ -29,7 +29,7 @@ class GameService {
      * Создание новой игры
      * @return Game
      */
-    public function startNewGame() {
+    public function newGame() {
         $players = new ArrayCollection(
             [
                 $this->initialisePlayer('X', 'крестики'),
