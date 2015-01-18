@@ -4,12 +4,12 @@
     "version": "1.0.0",
     "type": "project",
     "license": "MIT",
-    "time": "2015-01-01",
+    "time": "2015-01-19",
     "autoload": {
         "psr-0": { "": "src/", "SymfonyStandard": "app/" }
     },
     "require": {
-        "php": ">=5.5",
+        "php": ">=5.4",
         "symfony/symfony": "2.6.*",
         "doctrine/orm": "~2.2,>=2.2.3",
         "doctrine/doctrine-bundle": "~1.2",
