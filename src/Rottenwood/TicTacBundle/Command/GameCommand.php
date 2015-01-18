@@ -18,6 +18,7 @@ use Symfony\Component\Console\Question\ChoiceQuestion;
 
 class GameCommand extends ContainerAwareCommand {
 
+    const MENU_GAME_SAVE = 0;
     const MENU_GAME_NEW = 1;
     const MENU_GAME_LOAD = 2;
 
@@ -29,6 +30,7 @@ class GameCommand extends ContainerAwareCommand {
     }
 
     protected function execute(InputInterface $input, OutputInterface $output) {
+        $em = $this->getContainer()->get('doctrine.orm.entity_manager');
         $this->gameService = $this->getContainer()->get('game');
         $table = $this->getHelper('table');
         $questionHelper = $this->getHelper('question');
@@ -45,20 +47,29 @@ class GameCommand extends ContainerAwareCommand {
         if ($game) {
             $this->drawTable($game, $table, $output);
 
-            while ($this->gameService->getEmptyFields($game) && !$this->gameService->isGameOver($game)) {
+            $runNextRound = true;
+            while ($this->gameService->getEmptyFields($game)
+                && !$this->gameService->isGameOver($game)
+                && $runNextRound) {
                 $currentPlayer = $this->gameService->getCurrentPlayer($game);
-                $this->makeRound($game, $input, $output, $questionHelper);
+                $runNextRound = $this->makeRound($game, $input, $output, $questionHelper);
                 $this->drawTable($game, $table, $output);
             }
 
             if (isset($currentPlayer) && $this->gameService->isGameOver($game)) {
                 $output->writeln(sprintf('Игра завершена. Победили %s!', $currentPlayer->getName()));
+            } elseif (!$runNextRound) {
+                $em->persist($game);
+                $em->flush();
+                $output->writeln('Ваша игра была записана. До новой встречи!');
             } else {
                 $output->writeln('Игра завершена в ничью!');
             }
         } else {
             $output->writeln('Не найдено ни одной сохраннной игры.');
         }
+
+        $em->flush();
     }
 
     /**
@@ -135,14 +146,22 @@ class GameCommand extends ContainerAwareCommand {
                                QuestionHelper $questionHelper) {
         $currentPlayer = $this->gameService->nextPlayer($game);
 
+        $choices = [self::MENU_GAME_SAVE => 'Сохранить игру и выйти'];
+        $choices = array_merge($choices, $this->gameService->getEmptyFields($game));
+
         $question = new ChoiceQuestion(
             sprintf('Сейчас ходят %s:', $currentPlayer->getName()),
-            $this->gameService->getEmptyFields($game)
+            $choices
         );
         $question->setPrompt('Введите номер пустой клетки: ');
         $question->setErrorMessage('Выбранное поле занято или не существует!');
 
         $fieldName = $questionHelper->ask($input, $output, $question);
+        $answerId = array_search($fieldName, $question->getChoices());
+
+        if ($answerId == self::MENU_GAME_SAVE) {
+            return false;
+        }
 
         // Добавление поля
         $field = new Field($game, $currentPlayer, $fieldName);
@@ -194,20 +213,21 @@ class GameCommand extends ContainerAwareCommand {
             return false;
         }
 
-        $savedGames = array_map(function (Game $game) {
-            return $game->getId();
-        },
-            $savedGames);
-
         $question = new ChoiceQuestion(
             'Список сохраненных игр:',
-            $savedGames
+            array_map(function (Game $game) {
+                return $game->getId();
+            },
+                $savedGames)
         );
         $question->setPrompt('Какую игру вы хотите загрузить?: ');
         $question->setErrorMessage('Пожалуйста, выберите номер из списка!');
 
         $gameId = $questionHelper->ask($input, $output, $question);
 
-        return $gameRepository->find($gameId);
+        $game = $gameRepository->find($gameId);
+        $em->remove($game);
+
+        return $game;
     }
 }

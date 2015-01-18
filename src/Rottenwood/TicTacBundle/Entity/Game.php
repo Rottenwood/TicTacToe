@@ -26,7 +26,7 @@ class Game {
     private $id;
 
     /**
-     * @ORM\OneToMany(targetEntity="Field", mappedBy="game")
+     * @ORM\OneToMany(targetEntity="Field", cascade={"all"}, mappedBy="game")
      **/
     private $fields;
 
