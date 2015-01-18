@@ -34,9 +34,10 @@ class GameCommand extends ContainerAwareCommand {
 
         $output->writeln(['Новая игра начинается!', '']);
 
+        $this->drawTable($game, $table, $output);
         while ($this->gameService->getEmptyFields($game)) {
-            $this->drawTable($table, $output);
             $this->makeRound($game, $input, $output, $questionHelper);
+            $this->drawTable($game, $table, $output);
         }
 
         $output->writeln('Игра завершена в ничью!');
@@ -48,9 +49,7 @@ class GameCommand extends ContainerAwareCommand {
      * @param TableHelper     $table
      * @param OutputInterface $output
      */
-    private function drawTable(TableHelper $table, OutputInterface $output) {
-        $imageTic = ' X ';
-        $imageTac = ' O ';
+    private function drawTable(Game $game, TableHelper $table, OutputInterface $output) {
         $imageBorder = '---';
         $imageSpace = ' ';
         $letters = $this->gameService->createLettersArray();
@@ -63,8 +62,17 @@ class GameCommand extends ContainerAwareCommand {
 
         $rows = [];
         for ($i = 1; $i <= Game::BOARD_AXIS_Y; $i++) {
-            $row = array_pad([], Game::BOARD_AXIS_X, $imageSpace);
-            array_unshift($row, $letters[$i - 1]);
+            $rowLetter = $letters[$i - 1];
+
+            $row = [];
+            for ($x = 1; $x <= Game::BOARD_AXIS_X; $x++) {
+                $field = $game->getFieldByName($rowLetter . $x);
+
+                $row[] = $field->isEmpty()
+                    ? $imageSpace
+                    : $field->current()->getPlayer()->getSymbol();
+            }
+            array_unshift($row, $rowLetter);
             $rows[] = $this->addSpaces($row, $imageSpace);
 
             if ($i != Game::BOARD_AXIS_Y) {

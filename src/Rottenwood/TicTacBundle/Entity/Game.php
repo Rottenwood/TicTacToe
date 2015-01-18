@@ -3,6 +3,7 @@
 namespace Rottenwood\TicTacBundle\Entity;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -81,5 +82,21 @@ class Game {
      */
     public function setPlayers($players) {
         $this->players = $players;
+    }
+
+    /**
+     * Поиск клетки игрового поля по ее имени
+     * @param string $name
+     * @return \Doctrine\Common\Collections\Collection|static
+     */
+    public function getFieldByName($name) {
+        $expr = Criteria::expr();
+        $criteria = Criteria::create();
+        $criteria->where(
+            $expr->eq('name', $name)
+        );
+        $criteria->setMaxResults(1);
+
+        return $this->fields->matching($criteria);
     }
 }
