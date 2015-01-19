@@ -60,7 +60,6 @@ class GameCommand extends ContainerAwareCommand {
                 $output->writeln(sprintf('Игра завершена. Победили %s!', $currentPlayer->getName()));
             } elseif (!$runNextRound) {
                 $em->persist($game);
-                $em->flush();
                 $output->writeln('Ваша игра была записана. До новой встречи!');
             } else {
                 $output->writeln('Игра завершена в ничью!');
