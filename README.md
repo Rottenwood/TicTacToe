@@ -15,7 +15,7 @@ TicTacToe console game
 
 > #### Инструкция по использованию
 
-Системные требования: php >=5.4, mysql, git, composer, phpunit
+Системные требования: php >=5.4 <=5.6, mysql, git, composer, phpunit
 
 1. Код проекта находится на гитхабе, сначала нужно его склонировать:
 > git clone https://github.com/Rottenwood/TicTacToe
